@@ -4,14 +4,16 @@
  * 
  * F. Guiet 
  * Creation           : 20190204
- * Last modification  : 20190420 
+ * Last modification  : 20200102
  * 
  * Version            : 1.0
  * History            : 1.0 - First version
  *                      1.1 - Add StillOnCheck
+ *                      20200102 - 1.2 - Remove battery voltage (not implemented yet on this board, check for external update first
  *                      
  * Note               : Credits go to Kevin Darrah who inspired me to build this trigboard (https://www.kevindarrah.com/wiki/index.php?title=TrigBoard)
  *                      ESP Board I am using ESP-12-E
+ *                      To program using Arduino IDE use NodeMCU 1.0 (ESP-12E Module)
 */
 
 //Light Mqtt library
@@ -22,7 +24,7 @@
 
 //Mqtt settings
 #define MQTT_SERVER "192.168.1.25"
-#define DEBUG 1
+#define DEBUG 0
 
 #define LED_PIN 2 //ESP-12-E led pin
 #define DONE_PIN 12
@@ -91,7 +93,7 @@ void SendStillOpenMessage() {
     }
   }
 
-  String mess = ConvertToJSonShortTestMsg("Attention, la porte du garage est toujours ouverte.");
+  String mess = ConvertToJSonShortTestMsg("Garage door is still opened !");
   debug_message("JSON Sensor : " + mess + ", topic : " +SMS_TOPIC, true);
   mess.toCharArray(message_buff, mess.length()+1);
     
@@ -140,11 +142,13 @@ void weAreDone() {
   }
 }
 
-//batteryVoltage = 0.00342 * analogRead(A0) + .823;//scale that 1V max to 0-4.5V
+//not implemented of this board for the moment...
 float readVoltage() {
 
+  return 0;
+
   //Based on TrigBoard Rev7
-  float batteryVoltage = (4 - 3.5)/(712 - 621) ;
+  /*float batteryVoltage = (4 - 3.5)/(712 - 621) ;
   batteryVoltage = analogRead(A0) * batteryVoltage + (4 - batteryVoltage * 712);
   return batteryVoltage;
 
@@ -178,7 +182,7 @@ float readVoltage() {
 
   debug_message("Battery voltage : " + String(vin,2), true);
 
-  return vin;  
+  return vin;  */
 }
 
 void setup() {
@@ -190,6 +194,9 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   pinMode(ADC_PIN, OUTPUT);
 
+  //First of all check whether it is an external wakeup or not
+  bool externalWakeUp = isExternalWakeUp();
+
   //Turn off LED
   digitalWrite(LED_PIN, HIGH);
 
@@ -199,10 +206,8 @@ void setup() {
      delay(100);
   }
 
-  bool externalWakeUp = true;
-
   //External or TPL5111 wake up?
-  if (!isExternalWakeUp()) {
+  if (!externalWakeUp) {
 
     debug_message("TPL5111 woke me up! leave me alone...", true);
     
@@ -220,13 +225,17 @@ void setup() {
       debug_message("reedswitch is NOT open", true);
     }
 
+    //Some delay so debug message can be printed
+    if (DEBUG) 
+      delay(100);
+      
     //Go to sleep immediatly
     weAreDone();
     return;
   }
   else {
     
-    debug_message("Something in the maibox, time to send a message!...", true);
+    debug_message("Someone has opened the garage door, time to send a message!...", true);
     InitSensors(externalWakeUp);
     
   }
@@ -357,9 +366,9 @@ void loop() {
   }
 
   //Read battery voltage
-  float vin = readVoltage();
+  //float vin = readVoltage();
 
-  String mess = ConvertToJSonShortTestMsg("Garage door just opened ! (battery : "+String(vin,2)+" v)");
+  String mess = ConvertToJSonShortTestMsg("Garage door has just opened ! (battery : check from time to time !)");
   //String mess = ConvertToJSon(String(vin,2));
   debug_message("JSON Sensor : " + mess + ", topic : " +SMS_TOPIC, true);
   mess.toCharArray(message_buff, mess.length()+1);

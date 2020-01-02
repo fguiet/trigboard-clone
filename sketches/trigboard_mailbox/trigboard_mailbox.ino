@@ -4,10 +4,11 @@
  * 
  * F. Guiet 
  * Creation           : 20191221
- * Last modification  :  
+ * Last modification  : 20191231 
  * 
  * Version            : 1.0
  * History            : 1.0 - First version
+ *                      1.1 - first check if external wake up before doing anythging else
  *                      
  *                      
  * Note               : Credits go to Kevin Darrah who inspired me to build this trigboard (https://www.kevindarrah.com/wiki/index.php?title=TrigBoard)
@@ -127,16 +128,16 @@ void setup() {
   //Turn off LED
   digitalWrite(LED_PIN, HIGH);
 
+  bool externalWakeUp = isExternalWakeUp();
+
   if (DEBUG) {
      //For debug purpose
      Serial.begin(115200);
      delay(100);
-  }
-
-  bool externalWakeUp = true;
+  }  
 
   //External or TPL5111 wake up?
-  if (!isExternalWakeUp()) {
+  if (!externalWakeUp) {
 
     debug_message("TPL5111 woke me up! leave me alone...", true);
     
