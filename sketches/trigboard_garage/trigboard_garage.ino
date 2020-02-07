@@ -10,10 +10,13 @@
  * History            : 1.0 - First version
  *                      1.1 - Add StillOnCheck
  *                      20200102 - 1.2 - Remove battery voltage (not implemented yet on this board, check for external update first
+ *                      20200207 - 1.3 Move to ArduinoJson 6.1.4
  *                      
  * Note               : Credits go to Kevin Darrah who inspired me to build this trigboard (https://www.kevindarrah.com/wiki/index.php?title=TrigBoard)
  *                      ESP Board I am using ESP-12-E
  *                      To program using Arduino IDE use NodeMCU 1.0 (ESP-12E Module)
+ *                      
+ *                      !!! CAREFUL when sending big message : do not forget to MQTT_MAX_PACKET_SIZE in PubSubClient library !!!
 */
 
 //Light Mqtt library
@@ -39,7 +42,7 @@ const char* password = "frederic";
 #define SMS_TOPIC  "guiet/automationserver/smsservice"
 #define MQTT_CLIENT_ID "TrigBoardGarageDoorSensor"
 #define MAX_RETRY 100
-#define FIRMWARE_VERSION "1.2"
+#define FIRMWARE_VERSION "1.3"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -93,7 +96,7 @@ void SendStillOpenMessage() {
     }
   }
 
-  String mess = ConvertToJSonShortTestMsg("Garage door is still opened !");
+  String mess = ConvertToJSon("Garage door is still opened !");
   debug_message("JSON Sensor : " + mess + ", topic : " +SMS_TOPIC, true);
   mess.toCharArray(message_buff, mess.length()+1);
     
@@ -316,10 +319,10 @@ boolean connectToWifi() {
   }  
 }
 
-String ConvertToJSonShortTestMsg(String message) {
+String ConvertToJSon(String message) {
     //Create JSon object
-    DynamicJsonBuffer  jsonBuffer(200);
-    JsonObject& root = jsonBuffer.createObject();
+    DynamicJsonDocument  jsonBuffer(200);
+    JsonObject root = jsonBuffer.to<JsonObject>(); 
 
     //Garage door still open guid
     String guid ="cce5d7f1-7aeb-443b-9b6d-c41db55da832";
@@ -328,15 +331,15 @@ String ConvertToJSonShortTestMsg(String message) {
     root["messagetext"] = message;
            
     String result;
-    root.printTo(result);
+    serializeJson(root, result);
 
     return result;
 }
 
-String ConvertToJSon(String battery) {
+/*String ConvertToJSon(String battery) {
     //Create JSon object
-    DynamicJsonBuffer  jsonBuffer(200);
-    JsonObject& root = jsonBuffer.createObject();
+    DynamicJsonDocument  jsonBuffer(200);
+    JsonObject root = jsonBuffer.to<JsonObject>();    
     
     root["sensorid"] = sensors[0].SensorId;
     root["name"] = sensors[0].Name;
@@ -345,10 +348,10 @@ String ConvertToJSon(String battery) {
     root["externalwakeup"] = sensors[0].External_wakeup; 
        
     String result;
-    root.printTo(result);
+    serializeJson(root, result);
 
     return result;
-}
+}*/
 
 void loop() {
   //Turn on LED...
@@ -368,7 +371,7 @@ void loop() {
   //Read battery voltage
   //float vin = readVoltage();
 
-  String mess = ConvertToJSonShortTestMsg("Garage door has just opened ! (battery : check from time to time !)");
+  String mess = ConvertToJSon("Garage door has just opened ! (battery : check from time to time !)");
   //String mess = ConvertToJSon(String(vin,2));
   debug_message("JSON Sensor : " + mess + ", topic : " +SMS_TOPIC, true);
   mess.toCharArray(message_buff, mess.length()+1);
