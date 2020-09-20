@@ -4,7 +4,7 @@
 
 This project is nothing but a less elaborated Kevin Darrah's trigboard.
 
-As a consequence, all credits goes to [Kevin Darrah](https://www.kevindarrah.com/wiki/index.php?title=TrigBoard)
+As a consequence, all credits goes to [Kevin Darrah](https://www.kevindarrah.com/wiki/index.php?title=TrigBoard), [Kevin's Github](https://github.com/krdarrah)
 
 ## Description / use cases
 
